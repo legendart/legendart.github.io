@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JAVIS — Service Portal</title>
+  <meta name="description" content="JAVIS 서비스 포털 — 사주풀이, 정세 분석, 유머 피드">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #111827;
+      --surface2:  #1a2235;
+      --border:    #1e2d45;
+      --accent:    #7c83fd;
+      --text:      #e2e8f0;
+      --text-dim:  rgba(226,232,240,0.55);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Background ── */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(124,131,253,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(59,130,246,.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(100,60,200,.1) 0%, transparent 45%);
+    }
+    .bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,.8) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 35% 8%, rgba(255,255,220,.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 50%, rgba(255,255,255,.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 85% 20%, rgba(255,255,255,.75) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 75%, rgba(255,255,220,.65) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 85%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 40%, rgba(255,255,220,.7) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 90% 60%, rgba(255,255,255,.55) 0%, transparent 100%);
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 0 3.5rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      background: rgba(124,131,253,.1);
+      border: 1px solid rgba(124,131,253,.25);
+      border-radius: 999px;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 1.8rem;
+    }
+    .hero-title {
+      font-size: clamp(2.8rem, 8vw, 5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      padding-bottom: 5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124,131,253,.4);
+      box-shadow: 0 12px 40px rgba(124,131,253,.12);
+    }
+
+    .card-emoji {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    .card-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .card-btn::after {
+      content: '→';
+      transition: transform 0.2s;
+    }
+    .card:hover .card-btn::after {
+      transform: translateX(4px);
+    }
+
+    /* card accent stripes */
+    .card--saju  { border-top: 2px solid rgba(201,168,76,.5); }
+    .card--news  { border-top: 2px solid rgba(59,130,246,.5); }
+    .card--humor { border-top: 2px solid rgba(124,131,253,.5); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+  <section class="hero">
+    <div class="hero-badge">⬡ SERVICE PORTAL</div>
+    <h1 class="hero-title">JAVIS</h1>
+    <p class="hero-sub">AI 기반 서비스 포털 — 사주풀이부터 글로벌 리스크 분석, 유머 큐레이션까지</p>
+  </section>
+
+  <div class="cards">
+    <a class="card card--saju" href="https://legendart.github.io/saju/">
+      <div class="card-emoji">🔮</div>
+      <div class="card-name">사주풀이</div>
+      <p class="card-desc">생년월일시로 보는 오늘의 운세. AI가 사주 원국을 분석하고 맞춤 조언을 드립니다.</p>
+      <span class="card-btn">바로가기</span>
+    </a>
+
+    <a class="card card--news" href="https://legendart.github.io/news/">
+      <div class="card-emoji">📡</div>
+      <div class="card-name">정세 리스크 분석</div>
+      <p class="card-desc">글로벌 뉴스를 실시간으로 수집해 지정학적 리스크를 분석하는 인텔리전스 대시보드.</p>
+      <span class="card-btn">바로가기</span>
+    </a>
+
+    <a class="card card--humor" href="https://legendart.github.io/humor/">
+      <div class="card-emoji">😂</div>
+      <div class="card-name">유머 피드</div>
+      <p class="card-desc">Reddit + 에펨코리아·루리웹·웃긴대학 인기 유머글을 한곳에서 모아 보세요.</p>
+      <span class="card-btn">바로가기</span>
+    </a>
+  </div>
+</div>
+
+<footer>© 2026 JAVIS · legendart.github.io</footer>
+
+</body>
+</html>
