@@ -109,7 +109,7 @@
     /* ── Cards ── */
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.25rem;
       padding-bottom: 5rem;
     }
@@ -169,6 +169,7 @@
     .card--saju  { border-top: 2px solid rgba(201,168,76,.5); }
     .card--news  { border-top: 2px solid rgba(59,130,246,.5); }
     .card--humor { border-top: 2px solid rgba(124,131,253,.5); }
+    .card--star  { border-top: 2px solid rgba(0,200,81,.5); }
 
     /* ── Footer ── */
     footer {
@@ -190,7 +191,7 @@
   <section class="hero">
     <div class="hero-badge">⬡ SERVICE PORTAL</div>
     <h1 class="hero-title">JAVIS</h1>
-    <p class="hero-sub">AI 기반 서비스 포털 — 사주풀이부터 글로벌 리스크 분석, 유머 큐레이션까지</p>
+    <p class="hero-sub">AI 기반 서비스 포털 — 정세 분석, 유머 큐레이션, 연예인 뉴스까지</p>
   </section>
 
   <div class="cards">
@@ -212,6 +213,13 @@
       <div class="card-emoji">😂</div>
       <div class="card-name">유머 피드</div>
       <p class="card-desc">Reddit + 에펨코리아·루리웹·웃긴대학 인기 유머글을 한곳에서 모아 보세요.</p>
+      <span class="card-btn">바로가기</span>
+    </a>
+
+    <a class="card card--star" href="https://legendart.github.io/star/">
+      <div class="card-emoji">⭐</div>
+      <div class="card-name">스타 뉴스</div>
+      <p class="card-desc">NCT 등 연예인 소식을 Google News에서 실시간으로 수집해 한곳에서 모아 보세요.</p>
       <span class="card-btn">바로가기</span>
     </a>
   </div>
