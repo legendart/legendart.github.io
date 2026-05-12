@@ -1,7 +1,7 @@
 /* ── JAVIS Shared Nav + Visitor Counter v1 ──────────────────────────────
    Usage: <script src="https://legendart.github.io/nav.js?v=2" defer></script>
           <script>document.addEventListener('DOMContentLoaded',()=>JavisNav.init('pageid'));</script>
-   Page IDs: home | news | saju | star | humor | hotdeal | cal
+   Page IDs: home | news | cal | saju | star | humor | hotdeal | cal
 ─────────────────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
@@ -9,6 +9,7 @@
   /* ── Service registry ─────────────────────────────────────────────── */
   const SERVICES = [
     { id: 'news',    emoji: '📡', label: '뉴스',  url: 'https://legendart.github.io/news/',    group: '정보' },
+    { id: 'cal',     emoji: '📅', label: '달력',  url: 'https://legendart.github.io/cal/',     group: '정보' },
     { id: 'saju',   emoji: '🔮', label: '사주',  url: 'https://legendart.github.io/saju/',    group: '엔터' },
     { id: 'star',   emoji: '⭐', label: '스타',  url: 'https://legendart.github.io/star/',    group: '엔터' },
     { id: 'humor',  emoji: '😂', label: '유머',  url: 'https://legendart.github.io/humor/',   group: '커뮤니티' },
