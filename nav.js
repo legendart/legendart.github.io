@@ -14,6 +14,7 @@
     { id: 'star',   emoji: '⭐', label: '스타',  url: 'https://legendart.github.io/star/',    group: '엔터' },
     { id: 'humor',  emoji: '😂', label: '유머',  url: 'https://legendart.github.io/humor/',   group: '커뮤니티' },
     { id: 'hotdeal',emoji: '🔥', label: '핫딜',  url: 'https://legendart.github.io/hotdeal/', group: '커뮤니티' },
+    { id: 'admin',   emoji: '🛡️', label: '관리',  url: 'https://legendart.github.io/admin/',   group: '정보' },
   ];
   const GROUPS = ['정보', '엔터', '커뮤니티'];
 

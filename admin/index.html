@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JAVIS Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c27;
+      --border: #252535;
+      --text: #e2e2f0;
+      --muted: #6b6b8a;
+      --primary: #7c3aed;
+      --primary-l: #a78bfa;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #facc15;
+      --blue: #3b82f6;
+      --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Login screen ── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .login-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 2rem; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .login-box h1 { font-size: 1.4rem; font-weight: 800; text-align: center; }
+    .login-box p  { font-size: 0.82rem; color: var(--muted); text-align: center; }
+    .login-input {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: inherit; font-size: 0.95rem; padding: 10px 14px;
+      width: 100%; outline: none; transition: border-color .15s;
+    }
+    .login-input:focus { border-color: var(--primary); }
+    .login-btn {
+      background: var(--primary); color: #fff; border: none; border-radius: var(--radius);
+      padding: 11px; font-family: inherit; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; width: 100%;
+    }
+    .login-btn:hover { opacity: .85; }
+    .login-error { font-size: 0.82rem; color: var(--red); text-align: center; display: none; }
+
+    /* ── Main layout ── */
+    #admin-app { display: none; }
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem; height: 54px; display: flex; align-items: center;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title { font-size: 1.05rem; font-weight: 800; flex: 1; }
+    .topbar-title span { color: var(--primary-l); }
+    .topbar-user  { font-size: 0.78rem; color: var(--muted); margin-right: 12px; }
+    .logout-btn {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); font-family: inherit; font-size: 0.78rem; padding: 5px 10px; cursor: pointer;
+    }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex; gap: 2px; padding: 1rem 1.5rem 0; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .tab-btn {
+      background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 16px 10px;
+      color: var(--muted); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--primary-l); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    /* ── Content ── */
+    .content { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-l); }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; display: flex; flex-direction: column; gap: 10px;
+    }
+    .card-header { display: flex; align-items: center; gap: 10px; }
+    .card-emoji { font-size: 1.4rem; }
+    .card-title { font-weight: 700; font-size: 0.95rem; flex: 1; }
+    .card-meta { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 600;
+    }
+    .badge.success { background: rgba(34,197,94,.15); color: var(--green); }
+    .badge.fail    { background: rgba(239,68,68,.15);  color: var(--red); }
+    .badge.pending { background: rgba(250,204,21,.15); color: var(--yellow); }
+    .badge.unknown { background: var(--surface2); color: var(--muted); }
+    .badge::before { content: '●'; font-size: 0.6rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: none; border-radius: var(--radius); padding: 7px 14px;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .8; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-outline  { background: none; border: 1px solid var(--border); color: var(--text); }
+    .btn-danger   { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-green    { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+
+    /* ── Progress bars / stats ── */
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); }
+    .stat-value { font-size: 0.95rem; font-weight: 700; }
+
+    /* ── Log table ── */
+    .log-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .log-table th {
+      background: var(--surface2); padding: 8px 12px; text-align: left;
+      color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border);
+    }
+    .log-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: var(--surface2); }
+
+    /* ── Settings form ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+    .form-input {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: inherit; font-size: 0.88rem; padding: 9px 12px; outline: none;
+      transition: border-color .15s; width: 100%;
+    }
+    .form-input:focus { border-color: var(--primary); }
+    .form-hint { font-size: 0.72rem; color: var(--muted); }
+    .cron-badge {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-family: monospace; color: var(--primary-l);
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 20px; font-size: 0.85rem; font-weight: 600; z-index: 9999;
+      box-shadow: 0 8px 30px rgba(0,0,0,.5); transition: opacity .3s;
+    }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="text-align:center;font-size:2rem;">🛡️</div>
+    <h1>JAVIS Admin</h1>
+    <p>관리자 비밀번호를 입력하세요</p>
+    <input type="password" id="pw-input" class="login-input" placeholder="비밀번호" autocomplete="current-password">
+    <button class="login-btn" id="login-btn">로그인</button>
+    <div class="login-error" id="login-error">비밀번호가 올바르지 않습니다.</div>
+    <p style="font-size:0.72rem;color:var(--muted)">※ 처음 방문 시 입력한 비밀번호가 설정됩니다</p>
+  </div>
+</div>
+
+<!-- ── Admin App ── -->
+<div id="admin-app">
+  <div class="topbar">
+    <div class="topbar-title">🛡️ <span>JAVIS</span> Admin</div>
+    <span class="topbar-user" id="topbar-user"></span>
+    <button class="logout-btn" id="logout-btn">로그아웃</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="dashboard">📊 대시보드</button>
+    <button class="tab-btn" data-tab="services">⚙️ 서비스 관리</button>
+    <button class="tab-btn" data-tab="visitors">👥 방문자 로그</button>
+    <button class="tab-btn" data-tab="settings">🔧 설정</button>
+  </div>
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="grid-2" style="margin-bottom:1.5rem;">
+        <div class="card">
+          <div class="section-title">📈 방문자 현황 (이 기기)</div>
+          <div id="visitor-stats"></div>
+        </div>
+        <div class="card">
+          <div class="section-title">🔄 서비스 최근 실행</div>
+          <div id="service-summary"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">📅 방문 이력 (최근 30일)</div>
+        <canvas id="visit-chart" height="80"></canvas>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <div class="tab-panel" id="tab-services">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div class="section-title" style="margin:0">서비스 워크플로 관리</div>
+        <button class="btn btn-outline" id="refresh-all-btn">🔄 전체 상태 새로고침</button>
+      </div>
+      <div class="grid-2" id="service-cards"></div>
+      <div style="margin-top:1rem;padding:12px;background:var(--surface2);border-radius:var(--radius);font-size:0.78rem;color:var(--muted);">
+        ℹ️ GitHub 토큰이 설정되어야 워크플로 상태 조회 및 수동 실행이 가능합니다. <a href="#" onclick="switchTab('settings')" style="color:var(--primary-l)">→ 설정에서 입력</a>
+      </div>
+    </div>
+
+    <!-- Visitors -->
+    <div class="tab-panel" id="tab-visitors">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
+        <div class="section-title" style="margin:0">방문자 로그</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" id="export-log-btn">📥 CSV 내보내기</button>
+          <button class="btn btn-danger" id="clear-log-btn">🗑️ 로그 초기화</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1rem;" id="visitor-detail-card"></div>
+      <div class="card" style="overflow-x:auto;">
+        <table class="log-table" id="visit-log-table">
+          <thead><tr><th>날짜</th><th>방문 횟수</th><th>누적</th></tr></thead>
+          <tbody id="visit-log-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">GitHub API 설정</div>
+          <div class="form-group">
+            <label class="form-label">GitHub Personal Access Token</label>
+            <input type="password" class="form-input" id="gh-token-input" placeholder="ghp_...">
+            <div class="form-hint">Settings → Developer settings → Personal access tokens → Fine-grained<br>권한: Actions (Read & Write)</div>
+          </div>
+          <button class="btn btn-primary" id="save-token-btn">저장</button>
+        </div>
+        <div class="card">
+          <div class="section-title">백엔드 서버 설정</div>
+          <div class="form-group">
+            <label class="form-label">Backend URL</label>
+            <input type="text" class="form-input" id="backend-url-input" placeholder="https://your-backend.com">
+            <div class="form-hint">사주 등 데이터 저장에 사용되는 백엔드 서버 주소</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" id="save-backend-btn">저장</button>
+            <button class="btn btn-outline" id="test-backend-btn">연결 테스트</button>
+          </div>
+          <div id="backend-test-result" style="font-size:0.78rem;margin-top:4px;"></div>
+        </div>
+        <div class="card">
+          <div class="section-title">관리자 비밀번호 변경</div>
+          <div class="form-group">
+            <label class="form-label">현재 비밀번호</label>
+            <input type="password" class="form-input" id="cur-pw-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">새 비밀번호</label>
+            <input type="password" class="form-input" id="new-pw-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">새 비밀번호 확인</label>
+            <input type="password" class="form-input" id="new-pw2-input">
+          </div>
+          <button class="btn btn-primary" id="change-pw-btn">비밀번호 변경</button>
+          <div id="pw-change-msg" style="font-size:0.78rem;margin-top:4px;"></div>
+        </div>
+        <div class="card">
+          <div class="section-title">워크플로 갱신 주기</div>
+          <div id="cron-info"></div>
+          <div style="margin-top:10px;font-size:0.78rem;color:var(--muted);">※ 갱신 주기 변경은 GitHub 레포의 워크플로 파일을 직접 수정해야 합니다.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────
+const OWNER = 'legendart';
+const SERVICES = [
+  { id: 'star',    emoji: '⭐', label: '스타 뉴스',  repo: 'star',    workflow: 'update-ko-news.yml', cron: '*/30 * * * *',  cronDesc: '30분마다',  url: 'https://legendart.github.io/star/' },
+  { id: 'humor',   emoji: '😂', label: '유머',       repo: 'humor',   workflow: 'scrape.yml',         cron: '0 */2 * * *',   cronDesc: '2시간마다', url: 'https://legendart.github.io/humor/' },
+  { id: 'hotdeal', emoji: '🔥', label: '핫딜',       repo: 'hotdeal', workflow: 'update-deals.yml',   cron: '*/30 * * * *',  cronDesc: '30분마다',  url: 'https://legendart.github.io/hotdeal/' },
+];
+
+const ADMIN_PW_KEY   = 'javis_admin_pw';
+const GH_TOKEN_KEY   = 'javis_admin_token';
+const BACKEND_KEY    = 'javis_backend_url';
+const VISIT_LOG_KEY  = 'javis_visitor';
+const VISIT_HIST_KEY = 'javis_visit_history';
+
+// ── Auth ────────────────────────────────────────────────────
+async function hashPw(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function login() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+  const hash = await hashPw(pw);
+  const stored = localStorage.getItem(ADMIN_PW_KEY);
+  if (!stored) {
+    localStorage.setItem(ADMIN_PW_KEY, hash);
+    startAdmin();
+  } else if (stored === hash) {
+    startAdmin();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function startAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-app').style.display = 'block';
+  initAdmin();
+}
+
+document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.getElementById('logout-btn').addEventListener('click', () => location.reload());
+</script>
+
+<script>
+// ── Tabs ────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
+}
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ── Toast ───────────────────────────────────────────────────
+function toast(msg, ok = true) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; }, 2000);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ── GitHub API ──────────────────────────────────────────────
+function getToken() { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+
+async function ghFetch(path, opts = {}) {
+  const token = getToken();
+  if (!token) throw new Error('토큰 없음');
+  const res = await fetch(`https://api.github.com${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+  return res.json();
+}
+
+async function getWorkflowRuns(repo, workflow) {
+  try {
+    const data = await ghFetch(`/repos/${OWNER}/${repo}/actions/workflows/${workflow}/runs?per_page=5`);
+    return data.workflow_runs || [];
+  } catch { return []; }
+}
+
+async function triggerWorkflow(repo, workflow) {
+  await ghFetch(`/repos/${OWNER}/${repo}/actions/workflows/${workflow}/dispatches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main' }),
+  });
+}
+
+// ── Visit data ──────────────────────────────────────────────
+function getVisitorData() {
+  try { return JSON.parse(localStorage.getItem(VISIT_LOG_KEY) || '{}'); } catch { return {}; }
+}
+function getVisitHistory() {
+  try { return JSON.parse(localStorage.getItem(VISIT_HIST_KEY) || '{}'); } catch { return {}; }
+}
+
+// ── Service Cards ────────────────────────────────────────────
+let serviceRunData = {};
+
+async function loadServiceCard(svc) {
+  const card = document.getElementById(`svc-card-${svc.id}`);
+  if (!card) return;
+  const runsEl = card.querySelector('.svc-runs');
+  const triggerBtn = card.querySelector('.trigger-btn');
+
+  runsEl.innerHTML = '<div class="spinner"></div>';
+  const runs = await getWorkflowRuns(svc.repo, svc.workflow);
+  serviceRunData[svc.id] = runs;
+
+  if (!runs.length) {
+    runsEl.innerHTML = '<div style="color:var(--muted);font-size:.8rem">토큰 미설정 또는 실행 이력 없음</div>';
+    return;
+  }
+
+  const latest = runs[0];
+  const status = latest.conclusion || latest.status;
+  const badgeClass = status === 'success' ? 'success' : status === 'failure' ? 'fail' : 'pending';
+  const ago = timeAgo(latest.updated_at);
+
+  runsEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="badge ${badgeClass}">${status}</span>
+      <span style="font-size:.78rem;color:var(--muted)">마지막 실행: ${ago}</span>
+    </div>
+    <div style="margin-top:8px;">
+      ${runs.slice(0,5).map(r => {
+        const cls = r.conclusion === 'success' ? 'success' : r.conclusion === 'failure' ? 'fail' : 'pending';
+        return `<span class="badge ${cls}" style="margin:2px;" title="${new Date(r.updated_at).toLocaleString('ko-KR')}">${r.conclusion || r.status}</span>`;
+      }).join('')}
+    </div>`;
+
+  triggerBtn.disabled = false;
+}
+
+function buildServiceCards() {
+  const container = document.getElementById('service-cards');
+  const summary   = document.getElementById('service-summary');
+  container.innerHTML = '';
+  summary.innerHTML   = '';
+
+  SERVICES.forEach(svc => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = `svc-card-${svc.id}`;
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-emoji">${svc.emoji}</span>
+        <div>
+          <div class="card-title">${svc.label}</div>
+          <div class="card-meta">
+            갱신 주기: <span class="cron-badge">${svc.cron}</span> (${svc.cronDesc})
+          </div>
+        </div>
+        <a href="${svc.url}" target="_blank" style="color:var(--muted);font-size:0.75rem;text-decoration:none;">↗ 열기</a>
+      </div>
+      <div class="svc-runs"><div style="color:var(--muted);font-size:.8rem">불러오는 중...</div></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-green trigger-btn" disabled data-repo="${svc.repo}" data-workflow="${svc.workflow}" data-label="${svc.label}">
+          ▶ 지금 실행
+        </button>
+        <a href="https://github.com/${OWNER}/${svc.repo}/actions" target="_blank" class="btn btn-outline" style="text-decoration:none;">GitHub Actions ↗</a>
+      </div>`;
+    container.appendChild(card);
+
+    // Summary item
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span class="stat-label">${svc.emoji} ${svc.label}</span><span id="svc-summary-${svc.id}" class="stat-value"><span class="spinner"></span></span>`;
+    summary.appendChild(row);
+
+    card.querySelector('.trigger-btn').addEventListener('click', async function() {
+      this.disabled = true;
+      this.innerHTML = '<span class="spinner"></span> 실행 중...';
+      try {
+        await triggerWorkflow(this.dataset.repo, this.dataset.workflow);
+        toast(`✅ ${this.dataset.label} 워크플로 실행됨`);
+        setTimeout(() => loadServiceCard(svc), 3000);
+      } catch(e) {
+        toast(`❌ 실행 실패: ${e.message}`, false);
+        this.disabled = false;
+        this.textContent = '▶ 지금 실행';
+      }
+    });
+
+    loadServiceCard(svc).then(() => {
+      const runs = serviceRunData[svc.id] || [];
+      const el = document.getElementById(`svc-summary-${svc.id}`);
+      if (!runs.length) { el.textContent = '-'; return; }
+      const s = runs[0].conclusion || runs[0].status;
+      const cls = s === 'success' ? 'success' : s === 'failure' ? 'fail' : 'pending';
+      el.innerHTML = `<span class="badge ${cls}">${s}</span> <span style="font-size:.75rem;color:var(--muted)">${timeAgo(runs[0].updated_at)}</span>`;
+    });
+  });
+}
+
+document.getElementById('refresh-all-btn').addEventListener('click', () => {
+  SERVICES.forEach(svc => loadServiceCard(svc));
+  toast('새로고침 중...');
+});
+</script>
+
+<script>
+// ── Visitor Panel ────────────────────────────────────────────
+function renderVisitorStats() {
+  const d = getVisitorData();
+  const el = document.getElementById('visitor-stats');
+  el.innerHTML = `
+    <div class="stat-row"><span class="stat-label">총 방문 횟수</span><span class="stat-value" style="color:var(--primary-l)">${(d.total||0).toLocaleString()}</span></div>
+    <div class="stat-row"><span class="stat-label">오늘 방문</span><span class="stat-value">${(d.todayCount||0).toLocaleString()}</span></div>
+    <div class="stat-row"><span class="stat-label">연속 방문일</span><span class="stat-value" style="color:var(--yellow)">🔥 ${(d.streak||0)}일</span></div>
+    <div class="stat-row"><span class="stat-label">최초 방문</span><span class="stat-value" style="font-size:.82rem">${d.firstVisit||'-'}</span></div>
+    <div class="stat-row"><span class="stat-label">마지막 방문</span><span class="stat-value" style="font-size:.82rem">${d.lastDate||'-'}</span></div>`;
+}
+
+function renderVisitorDetail() {
+  const d = getVisitorData();
+  const el = document.getElementById('visitor-detail-card');
+  const days = d.firstVisit ? Math.ceil((Date.now() - new Date(d.firstVisit)) / 86400000) : 0;
+  el.innerHTML = `
+    <div class="section-title">이 기기 통계</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:8px;">
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--primary-l)">${(d.total||0).toLocaleString()}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">총 방문 횟수</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--green)">${(d.todayCount||0).toLocaleString()}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">오늘 방문</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--yellow)">🔥${(d.streak||0)}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">연속 방문일</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--blue)">${days}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">총 사용 기간 (일)</div>
+      </div>
+    </div>`;
+}
+
+function renderVisitLog() {
+  const hist = getVisitHistory();
+  const d = getVisitorData();
+  const tbody = document.getElementById('visit-log-body');
+
+  // Build daily history from stored data
+  const entries = Object.entries(hist).sort((a,b) => b[0].localeCompare(a[0]));
+
+  // Also add today if not in history
+  const today = new Date().toISOString().slice(0,10);
+  if (d.lastDate === today && !hist[today]) {
+    entries.unshift([today, d.todayCount]);
+  }
+
+  if (!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:20px">기록 없음</td></tr>';
+    return;
+  }
+
+  let cumulative = d.total || 0;
+  tbody.innerHTML = entries.map(([date, count]) => {
+    const row = `<tr><td>${date}</td><td>${count}</td><td>${cumulative.toLocaleString()}</td></tr>`;
+    cumulative -= count;
+    return row;
+  }).join('');
+}
+
+function renderVisitChart() {
+  const canvas = document.getElementById('visit-chart');
+  if (!canvas) return;
+  const hist = getVisitHistory();
+  const d = getVisitorData();
+  const today = new Date().toISOString().slice(0,10);
+
+  // Build last 30 days array
+  const labels = [], values = [];
+  for (let i = 29; i >= 0; i--) {
+    const dt = new Date(Date.now() - i * 86400000);
+    const key = dt.toISOString().slice(0,10);
+    labels.push(key.slice(5)); // MM-DD
+    const v = key === today ? (d.todayCount || 0) : (hist[key] || 0);
+    values.push(v);
+  }
+
+  // Simple canvas bar chart
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 800;
+  canvas.width  = W;
+  canvas.height = 80;
+  const max = Math.max(...values, 1);
+  const barW = W / values.length;
+
+  ctx.clearRect(0, 0, W, 80);
+  values.forEach((v, i) => {
+    const h = (v / max) * 60;
+    ctx.fillStyle = labels[i] === today.slice(5) ? '#a78bfa' : '#3b3b6b';
+    ctx.fillRect(i * barW + 1, 80 - h, barW - 2, h);
+  });
+}
+
+// Export CSV
+document.getElementById('export-log-btn').addEventListener('click', () => {
+  const hist = getVisitHistory();
+  const d = getVisitorData();
+  const today = new Date().toISOString().slice(0,10);
+  let csv = 'date,visits\n';
+  const all = { ...hist };
+  if (d.lastDate === today) all[today] = d.todayCount;
+  Object.entries(all).sort((a,b) => b[0].localeCompare(a[0])).forEach(([date, cnt]) => {
+    csv += `${date},${cnt}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `javis-visits-${today}.csv`;
+  a.click();
+});
+
+document.getElementById('clear-log-btn').addEventListener('click', () => {
+  if (!confirm('방문 로그를 초기화할까요? 이 기기의 방문 기록이 모두 삭제됩니다.')) return;
+  localStorage.removeItem(VISIT_LOG_KEY);
+  localStorage.removeItem(VISIT_HIST_KEY);
+  toast('방문 로그가 초기화되었습니다.');
+  renderVisitorStats(); renderVisitorDetail(); renderVisitLog();
+});
+</script>
+
+<script>
+// ── Settings panel ────────────────────────────────────────────
+function initSettings() {
+  const tokenInput   = document.getElementById('gh-token-input');
+  const backendInput = document.getElementById('backend-url-input');
+  const cronInfo     = document.getElementById('cron-info');
+
+  const stored = localStorage.getItem(GH_TOKEN_KEY);
+  if (stored) tokenInput.value = stored;
+  const backend = localStorage.getItem(BACKEND_KEY);
+  if (backend) backendInput.value = backend;
+
+  // Cron table
+  cronInfo.innerHTML = SERVICES.map(s => `
+    <div class="stat-row">
+      <span class="stat-label">${s.emoji} ${s.label}</span>
+      <span><span class="cron-badge">${s.cron}</span> ${s.cronDesc}</span>
+    </div>`).join('');
+
+  document.getElementById('save-token-btn').addEventListener('click', () => {
+    const val = tokenInput.value.trim();
+    if (val) { localStorage.setItem(GH_TOKEN_KEY, val); toast('GitHub 토큰 저장됨'); buildServiceCards(); }
+    else { localStorage.removeItem(GH_TOKEN_KEY); toast('토큰 삭제됨'); }
+  });
+
+  document.getElementById('save-backend-btn').addEventListener('click', () => {
+    const val = backendInput.value.trim();
+    if (val) { localStorage.setItem(BACKEND_KEY, val); toast('백엔드 URL 저장됨'); }
+    else { localStorage.removeItem(BACKEND_KEY); toast('백엔드 URL 삭제됨'); }
+  });
+
+  document.getElementById('test-backend-btn').addEventListener('click', async () => {
+    const url = backendInput.value.trim();
+    const res = document.getElementById('backend-test-result');
+    if (!url) { res.textContent = 'URL을 입력하세요'; return; }
+    res.textContent = '연결 중...'; res.style.color = 'var(--muted)';
+    try {
+      const r = await fetch(url + '/api/health', { signal: AbortSignal.timeout(4000) });
+      if (r.ok) { res.textContent = '✅ 연결 성공'; res.style.color = 'var(--green)'; }
+      else { res.textContent = `❌ HTTP ${r.status}`; res.style.color = 'var(--red)'; }
+    } catch(e) {
+      res.textContent = `❌ 연결 실패: ${e.message}`; res.style.color = 'var(--red)';
+    }
+  });
+
+  document.getElementById('change-pw-btn').addEventListener('click', async () => {
+    const msg = document.getElementById('pw-change-msg');
+    const cur  = document.getElementById('cur-pw-input').value;
+    const nw   = document.getElementById('new-pw-input').value;
+    const nw2  = document.getElementById('new-pw2-input').value;
+    if (!cur || !nw || !nw2) { msg.textContent = '모든 항목을 입력하세요'; msg.style.color='var(--red)'; return; }
+    if (nw !== nw2) { msg.textContent = '새 비밀번호가 일치하지 않습니다'; msg.style.color='var(--red)'; return; }
+    const curHash = await hashPw(cur);
+    if (curHash !== localStorage.getItem(ADMIN_PW_KEY)) { msg.textContent = '현재 비밀번호가 틀립니다'; msg.style.color='var(--red)'; return; }
+    localStorage.setItem(ADMIN_PW_KEY, await hashPw(nw));
+    msg.textContent = '✅ 비밀번호 변경 완료'; msg.style.color='var(--green)';
+    document.getElementById('cur-pw-input').value = document.getElementById('new-pw-input').value = document.getElementById('new-pw2-input').value = '';
+  });
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function timeAgo(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff/60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
+  return `${Math.floor(diff/86400)}일 전`;
+}
+
+// ── Record daily visits to history ─────────────────────────────
+function recordTodayVisit() {
+  const today = new Date().toISOString().slice(0,10);
+  const d = getVisitorData();
+  if (!d.lastDate) return;
+  const hist = getVisitHistory();
+  // Record previous completed day if available
+  if (d.lastDate < today && d.todayCount) {
+    hist[d.lastDate] = (hist[d.lastDate] || 0) + d.todayCount;
+    try { localStorage.setItem(VISIT_HIST_KEY, JSON.stringify(hist)); } catch {}
+  }
+}
+
+// ── Init ────────────────────────────────────────────────────────
+function initAdmin() {
+  document.getElementById('topbar-user').textContent = `legendart@gmail.com`;
+  recordTodayVisit();
+  renderVisitorStats();
+  renderVisitorDetail();
+  renderVisitLog();
+  renderVisitChart();
+  buildServiceCards();
+  initSettings();
+}
+
+// Re-render chart on tab switch to get correct width
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'dashboard') btn.addEventListener('click', () => setTimeout(renderVisitChart, 50));
+});
+
+window.switchTab = switchTab;
+</script>
+
+</body>
+</html>
